@@ -14,6 +14,7 @@ and that is it basically.
 maybe add autopass generators as well.
 
 todo:
+
 1.create interface to save text data, and get it by calling the "name".
 
 2.sequre the key opener for the file in a secure file
