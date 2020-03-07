@@ -15,7 +15,9 @@ maybe add autopass generators as well.
 
 todo:
 1.create interface to save text data, and get it by calling the "name".
+
 2.sequre the key opener for the file in a secure file
+
 3.create interface to be able to get asked data after successful login.
 
 maybes:
