@@ -3,23 +3,18 @@ import imports.CONSTS as CONSTS
 import imports.keys as keys
 import traceback
 
-FLED = ".srq"
-FKEY = ".key"
-
 class efile:
-    def __init__(self, pathName):
-        self.path = pathName;
-        self.fkey = keys.load_key(pathName + FKEY)
-        self.fkey = Fernet(self.fkey)
+    def __init__(self, pathName, key):
+        self.path = pathName
+        self.key = key
+        self.fkey = Fernet(key)
         self.file = getFile(pathName + CONSTS.SED)
         self.data = self.file.read()
         
         length = self.data.decode();
-        print("new file")
         if(len(length) > 0):
             self.data = self.fkey.decrypt(self.data);
             self.data = self.data.decode();
-            print(self.data)
         else :
             self.data = "";
         
@@ -31,12 +26,13 @@ class efile:
         self.file.close();
         with open(self.getFilePath(), "wb") as f:
             f.write(self.fkey.encrypt(data));
-        self = efile(self.path);
+        self = efile(self.path, self.key);
         
 
 def getFile(pathName):
     try:
+        print(pathName + " loaded!")
         return open(pathName, "r+b")
     except:
-        print("rb2")
+        print(pathName + " was created!")
         return open(pathName, "w+b")
