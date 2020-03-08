@@ -13,13 +13,36 @@ and that is it basically.
 
 maybe add autopass generators as well.
 
+
+what is done ? :
+so far the program let you fill username and password, on with it tries to open the user file,
+if it doesnt exist it just generate one.
+if it exist and the generated key does not work (means password is wrong!) then do nothing.
+
+when in:
+you have the option to quit, load , add
+add : lets you to create a new password and encrypt it, add syntax => add name password/random/-r
+where random/-r would generate a random 12 character password. (can be even longer)
+and where passed anything else like password, would set the text to the password.
+
+load : would load the given password vide the name! syntax : load name
+where name is the name of the asked password.
+
+
+
+
+done:
+1. login system, type user and password.
+2. add, get password.
+3. generate random passwords.
+
+4. copy the asked password to clipboard
+
 todo:
+1. make a shortcut to create a password when pressed a special combination of keys,
+using the window name as the "password name" or something.
 
-1.create interface to save text data, and get it by calling the "name".
-
-2.sequre the key opener for the file in a secure file
-
-3.create interface to be able to get asked data after successful login.
+2. hopefully make it able to fill password/username for me.
 
 maybes:
 add actual gui, windows and stuff.
