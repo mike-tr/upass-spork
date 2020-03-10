@@ -39,6 +39,14 @@ class passwordManager:
             return self.confirm()
         return False;
 
+    def confirmPass(self):
+        while(True):
+            print("Enter password to confirm :")
+            password = getpass() 
+            key = keys.passwordToKey(self.user, password)
+            if(key == self.key):
+                return True
+            print("wrong password try again!")
 
     def run(self):
         run = True;
@@ -47,10 +55,10 @@ class passwordManager:
             if(value[0] == "quit"):
                 run = False;
             elif(value[0] == "add"):
-                if(len(value) > 2):
+                if(len(value) > 3):
                     add = True
                     if(value[1] in self.data.json):
-                        print("there already exist a record with the same name!")
+                        print("there already exist a record with the same unique_name!")
                         add = self.confirm()
                     if(add):
                         if(value[2] == "-r" or value[2] == "random"):
@@ -59,7 +67,11 @@ class passwordManager:
                         self.data.json[value[1]] = key.decode();
                         jdata = json.loads("{}");
                         jdata["name"] = value[1]
-                        jdata["pass"] = value[2]
+                        if(value[2] == "-n"):
+                            jdata["username"] = value[1]
+                        else:
+                            jdata["username"] = value[2]
+                        jdata["pass"] = value[3]
                         jdata = json.dumps(jdata);
                         fkey = Fernet(key);
 
@@ -71,7 +83,7 @@ class passwordManager:
                         print("copied the password to clipboard!")
                 else:
                     print("invalid syntax : valid syntax example")
-                    print("add example_name example_password/random/-r")
+                    print("add example_unqiue_name example_username/-n example_password/random/-r")
             elif(value[0] == "load"):
                 if(len(value) > 1):
                     if(value[1] in self.data.json):
@@ -83,6 +95,7 @@ class passwordManager:
                         #print(data["pass"])
                         #print(clipboard.paste())
                         clipboard.copy(data["pass"])
+                        print("username : " , data["username"])
                         print("copied the password to clipboard!")
                     else:
                         print(value[1] ," record doesnt exist!")
@@ -93,6 +106,7 @@ class passwordManager:
 
     def loadFile(self):
         if("state" not in self.data.json):
+            self.confirmPass()
             self.init()
         else:
             key = self.data.json["key"].encode();
