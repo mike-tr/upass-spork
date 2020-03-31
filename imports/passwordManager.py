@@ -48,8 +48,15 @@ class passwordManager:
                 return True
             print("wrong password try again!")
 
+    def getHelp(self):
+        print("commands : ")
+        print("add example_unqiue_name example_username/-n example_password/random/-r")
+        print("load unqiue_name or load unique_name -n (copy username then password)")
+        print("help")
+
     def run(self):
         run = True;
+        self.getHelp();
         while(run):
             value = input("Enter command : ").split();
             if(value[0] == "quit"):
@@ -61,8 +68,8 @@ class passwordManager:
                         print("there already exist a record with the same unique_name!")
                         add = self.confirm()
                     if(add):
-                        if(value[2] == "-r" or value[2] == "random"):
-                            value[2] = rand_text.randomStringDigits(12);
+                        if(value[3] == "-r" or value[3] == "random"):
+                            value[3] = rand_text.randomStringDigits(12);
                         key = Fernet.generate_key();
                         self.data.json[value[1]] = key.decode();
                         jdata = json.loads("{}");
@@ -77,7 +84,7 @@ class passwordManager:
 
                         jdata = fkey.encrypt(jdata.encode())
                         self.kdata.json[value[1]] = jdata.decode();
-                        clipboard.copy(value[2]);
+                        clipboard.copy(value[3]);
                         self.kdata.save();
                         self.data.save();
                         print("copied the password to clipboard!")
@@ -94,14 +101,28 @@ class passwordManager:
                         data = json.loads(data.decode());
                         #print(data["pass"])
                         #print(clipboard.paste())
-                        clipboard.copy(data["pass"])
-                        print("username : " , data["username"])
-                        print("copied the password to clipboard!")
+                        if(len(value) > 2 and value[2] == "-n"):
+                            clipboard.copy(data["username"])
+                            print("copied username to clipboard!")
+                            value = input("copy password y/n : ")
+                            if(value.lower() == "y" or value.lower() == "yes"):
+                                clipboard.copy(data["pass"])
+                                print("copied the password to clipboard!")
+                        else:
+                            clipboard.copy(data["pass"])
+                            print("username : " , data["username"])
+                            print("copied the password to clipboard!")
+                        
                     else:
                         print(value[1] ," record doesnt exist!")
                 else:
                     print("invalid syntax : valid syntax example")
-                    print("load example_name")
+                    print("load unqiue_name or load unique_name -n (copy username then password)")
+            elif(value[0] == "clear"):
+                import os
+                os.system('cls' if os.name == 'nt' else 'clear')
+            elif(value[0] == "help"):
+                self.getHelp();
 
 
     def loadFile(self):
