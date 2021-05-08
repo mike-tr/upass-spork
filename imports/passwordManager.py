@@ -2,12 +2,20 @@ import imports.dataHandler as jdata
 import imports.passwordToKey as keys
 import imports.randomText as rand_text
 import pyperclip as clipboard
+import imports.CONSTS as CONSTS
+import os
 
 from cryptography.fernet import Fernet
 from getpass import getpass
 import json
 
 protected = ["key", "state"]
+
+
+MAIN_MENU = 0
+RECORDS = 1
+
+VERSION = "v1.0.0"
 
 
 class passwordManager:
@@ -17,28 +25,57 @@ class passwordManager:
             print("Enter password")
             password = getpass()
             key = keys.passwordToKey(value, password)
+            self.state = MAIN_MENU
+            self.database = ""
             try:
                 self.pathName = pathDir + value
                 self.data = jdata.dataBase(pathDir + value, key)
                 self.key = key
                 self.user = value
-                self.loadFile()
+                self.checkUpdate()
                 break
                 # print(self.data.json)
                 # Do something with the file
             except:
                 print("Wrong username or password, try again!")
-        self.run()
+        self.main_menu()
 
-    def loadFile(self):
+    def update_ver(self):
+        print("Initiating update...")
+        orecords = {}
+        for record in self.data.json:
+            if(not self.isProtected(record, False)):
+                orecords[record] = self.data.json[record]
+
+        ndata = {}
+        ndata["state"] = self.data.json["state"]
+        ndata["key"] = self.data.json["key"]
+        ndata["version"] = VERSION
+        ndata["orecords"] = orecords
+
+        self.data.json = ndata
+
+        os.rename(self.pathName + "_data" + CONSTS.SED,
+                  self.pathName + "_data_orecords" + CONSTS.SED)
+        self.data.save()
+        print("update done...")
+
+    def loadFile(self, record_name):
+        key = self.data.json["key"].encode()
+        self.kdata = jdata.dataBase(
+            self.pathName + "_data_" + record_name, key)
+
+    def checkUpdate(self):
         if("state" not in self.data.json):
             self.confirmPass()
             self.init()
         else:
-            key = self.data.json["key"].encode()
-            self.kdata = jdata.dataBase(self.pathName + "_data", key)
+            if "version" not in self.data.json:
+                self.update_ver()
+            # key = self.data.json["key"].encode()
+            # self.kdata = jdata.dataBase(self.pathName + "_data", key)
 
-    def confirm(self):
+    def confirm(self) -> bool:
         value = input("confirm to procced! y/n : ")
         if(value.lower() == "y" or value.lower() == "yes"):
             print("Enter password to confirm :")
@@ -50,7 +87,7 @@ class passwordManager:
             return self.confirm()
         return False
 
-    def isProtected(self, value, log=True):
+    def isProtected(self, value, log=True) -> bool:
         pr = False
         for name in protected:
             if(value == name):
@@ -69,25 +106,59 @@ class passwordManager:
                 return True
             print("wrong password try again!")
 
-    def getHelp(self):
+    def getHelpRecords(self):
         print("commands : ")
         print("add example_unqiue_name example_username/-n example_password/random/-r")
         print("load unqiue_name or load unique_name -n (copy username then password)")
         print("remove or delete -n")
         print("records : show all records")
+        print("back : Go back")
         print("help")
 
-    def run(self):
+    def main_menu(self):
+        while(True):
+            if self.state == MAIN_MENU:
+                value = input("Enter command : ").split()
+                if value[0] == "quit":
+                    return
+                if value[0] == "records":
+                    i = 0
+                    for record in self.data.json:
+                        if(not self.isProtected(record, False)):
+                            i += 1
+                            print("(", i, ") : ", record)
+                if value[0] == "version":
+                    print("version", self.data.json["version"])
+                if value[0] == "load":
+                    if value[1] in self.data.json:
+                        self.loadFile(value[1])
+                        self.state = RECORDS
+                        self.database = value[1]
+                if value[0] == "adddb":
+                    if value[1] in self.data.json:
+                        print("db already exist!")
+                        continue
+                    self.data.json[value[1]] = {}
+                    self.loadFile(value[1])
+                    self.state = RECORDS
+                    self.database = value[1]
+
+            elif self.state == RECORDS:
+                self.records_menu()
+
+    def records_menu(self):
         run = True
-        self.getHelp()
+        self.getHelpRecords()
         while(run):
             value = input("Enter command : ").split()
-            if(value[0] == "quit"):
+            if(value[0] == "back"):
                 run = False
+                self.database = ""
+                self.state = MAIN_MENU
             elif(value[0] == "add"):
                 if(len(value) > 3 and not self.isProtected(value[1])):
                     add = True
-                    if(value[1] in self.data.json):
+                    if(value[1] in self.data.json[self.database]):
                         print(
                             "there already exist a record with the same unique_name!")
                         add = self.confirm()
@@ -95,7 +166,7 @@ class passwordManager:
                         if(value[3] == "-r" or value[3] == "random"):
                             value[3] = rand_text.randomStringDigits(12)
                         key = Fernet.generate_key()
-                        self.data.json[value[1]] = key.decode()
+                        self.data.json[self.database][value[1]] = key.decode()
                         jdata = json.loads("{}")
                         jdata["name"] = value[1]
                         if(value[2] == "-n"):
@@ -118,8 +189,8 @@ class passwordManager:
                         "add example_unqiue_name example_username/-n example_password/random/-r")
             elif(value[0] == "load"):
                 if(len(value) > 1 and not self.isProtected(value[1])):
-                    if(value[1] in self.data.json):
-                        key = self.data.json[value[1]].encode()
+                    if(value[1] in self.data.json[self.database]):
+                        key = self.data.json[self.database][value[1]].encode()
                         data = self.kdata.json[value[1]]
                         fkey = Fernet(key)
                         data = fkey.decrypt(data.encode())
@@ -148,12 +219,12 @@ class passwordManager:
                 import os
                 os.system('cls' if os.name == 'nt' else 'clear')
             elif(value[0] == "help"):
-                self.getHelp()
+                self.getHelpRecords()
             elif(value[0] == "remove" or value[0] == "delete"):
                 self.delete(value)
             elif(value[0] == "records"):
                 i = 0
-                for record in self.data.json:
+                for record in self.data.json[self.database]:
                     if(not self.isProtected(record, False)):
                         i += 1
                         print("(", i, ") : ", record)
@@ -165,13 +236,14 @@ class passwordManager:
         if(user_input[1] in self.data.json):
             value = input("you sure you want to delete this record y/n : ")
             if(value.lower() == "y" or value.lower() == "yes"):
-                del self.data.json[user_input[1]]
+                del self.data.json[self.database][user_input[1]]
                 self.data.save()
 
     def init(self):
         self.data.json["state"] = "initialized"
         key = Fernet.generate_key()
         self.data.json["key"] = key.decode()
-        self.kdata = jdata.dataBase(self.pathName + "_data", key)
-        self.kdata.save()
+        self.data.json["version"] = VERSION
+        # self.kdata = jdata.dataBase(self.pathName + "_data", key)
+        # self.kdata.save()
         self.data.save()
