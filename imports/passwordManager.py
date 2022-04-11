@@ -15,7 +15,7 @@ protected = ["key", "state"]
 MAIN_MENU = 0
 RECORDS = 1
 
-VERSION = "v1.0.0"
+VERSION = "v1.0.1"
 
 
 class passwordManager:
@@ -119,29 +119,41 @@ class passwordManager:
         while(True):
             if self.state == MAIN_MENU:
                 value = input("Enter command : ").split()
-                if value[0] == "quit":
-                    return
-                if value[0] == "records":
-                    i = 0
-                    for record in self.data.json:
-                        if(not self.isProtected(record, False)):
-                            i += 1
-                            print("(", i, ") : ", record)
-                if value[0] == "version":
-                    print("version", self.data.json["version"])
-                if value[0] == "load":
-                    if value[1] in self.data.json:
+                try:
+                    if value[0] == "help":
+                        print("Main menu commands:")
+                        print("load -n, where n is the name of the db, load database.")
+                        print("adddb -n, where n is the name of the new database.")
+                        print("records - prints all databases.")
+                        print("version - print version.")
+                        print("quit - exist.")
+                        print()
+                    if value[0] == "quit":
+                        return
+                    if value[0] == "records":
+                        i = 0
+                        for record in self.data.json:
+                            if(not self.isProtected(record, False)):
+                                i += 1
+                                print("(", i, ") : ", record)
+                    if value[0] == "version":
+                        print("version", self.data.json["version"])
+                    if value[0] == "load":
+                        if value[1] in self.data.json:
+                            self.loadFile(value[1])
+                            self.state = RECORDS
+                            self.database = value[1]
+                    if value[0] == "adddb":
+                        if value[1] in self.data.json:
+                            print("db already exist!")
+                            continue
+                        self.data.json[value[1]] = {}
                         self.loadFile(value[1])
                         self.state = RECORDS
                         self.database = value[1]
-                if value[0] == "adddb":
-                    if value[1] in self.data.json:
-                        print("db already exist!")
-                        continue
-                    self.data.json[value[1]] = {}
-                    self.loadFile(value[1])
-                    self.state = RECORDS
-                    self.database = value[1]
+                except:
+                    print("soemthing went wrong!")
+                
 
             elif self.state == RECORDS:
                 self.records_menu()
